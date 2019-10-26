@@ -9,8 +9,9 @@
 (defclass GithubWebhookHandler [BaseHTTPRequestHandler]
   (defn do-POST [self]
     ;; TODO verify secret
-    (let [con-len (int (.get self.headers "Content-Length"))]
-      (if (is None con-len)
+    (let [con-len  (int (.get self.headers "Content-Length"))
+         github-ev (.get self.headers "X-GitHub-Event")]
+      (if (or (is None con-len) (not (= github-ev "pull_request")))
         (.send-response self 400)
         (try
           (let [payload (json.loads (.read self.rfile con-len))]
