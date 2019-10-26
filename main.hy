@@ -1,10 +1,16 @@
-(import argparse json
-  [http.server [*]])
+(import os sys argparse json
+  [http.server [*]]
+  [github [Github]])
 (require [hy.contrib.walk [let]])
 
-;; TODO don't use a global variable for the webhook secret.
+;; Name of the environment variable containing
+;; the access token for the GitHub API.
+(setv GITHUB-ENV "GITHUB_ACCESS_TOKEN")
+
+;; TODO don't use a global variabler for handler parameter.
 ;; I don't like class factories either though.
 (setv webhook-secret None)
+(setv github-api None)
 
 (defclass GithubWebhookHandler [BaseHTTPRequestHandler]
   (defn do-POST [self]
@@ -27,6 +33,14 @@
     (HTTPServer (, addr port) GithubWebhookHandler)))
 
 (defmain [&rest args]
+  (let [access-token (os.getenv "GITHUB_ACCESS_TOKEN")]
+    (if (is None access-token)
+      (do
+        (print :file sys.stderr
+          (.format "Environment variable '{}' is not set" GITHUB-ENV))
+        (sys.exit 1))
+      (setv github-api (Github access-token))))
+
   (let [parser (argparse.ArgumentParser)]
     (parser.add-argument "secret" :type string
       :help "GitHub webhook secret, used for authorization")
