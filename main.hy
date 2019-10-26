@@ -14,7 +14,7 @@
 
 (defn start-server [addr port secret]
   (setv webhook-secret secret)
-  (.serve_forever
+  (.serve-forever
     (HTTPServer (, addr port) GithubWebhookHandler)))
 
 (defmain [&rest args]
