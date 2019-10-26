@@ -13,6 +13,14 @@
 (setv github-api None)
 
 (defclass GithubWebhookHandler [BaseHTTPRequestHandler]
+  (defn handle-pr [self dict]
+    (print dict)
+    (if (= (get dict "action") "opened")
+      (let [name (get (get dict "repository") "full_name")
+            repo (.get-repo github-api name)
+            pr   (.get-issue repo :number (get dict "number"))]
+        (.create-comment pr "Some Comment"))))
+
   (defn handle-ping [self]
     (.send-response self 200)
     (.send-header self "Content-Type" "application/json")
@@ -29,7 +37,7 @@
           (.send-response self 400)
           (try
             (let [payload (json.loads (.read self.rfile con-len))]
-              (print payload)
+              (.handle-pr self payload)
               (.send-response self 200))
             (except [json.decoder.JSONDecodeError]
             (.send-response self 400))))))
