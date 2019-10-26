@@ -11,10 +11,13 @@
     ;; TODO verify secret
     (let [con-len (int (.get self.headers "Content-Length"))]
       (if (is None con-len)
-        (.send-error self 400)
-        (let [payload (json.loads (.read self.rfile con-len))]
-          (print payload)
-          (.send-response self 200))))
+        (.send-response self 400)
+        (try
+          (let [payload (json.loads (.read self.rfile con-len))]
+            (print payload)
+            (.send-response self 200))
+          (except [json.decoder.JSONDecodeError]
+            (.send-response self 400)))))
     (.end-headers self)))
 
 (defn start-server [addr port secret]
