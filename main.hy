@@ -13,18 +13,26 @@
 (setv github-api None)
 
 (defclass GithubWebhookHandler [BaseHTTPRequestHandler]
+  (defn handle-ping [self]
+    (.send-response self 200)
+    (.send-header self "Content-Type" "application/json")
+    (.end-headers self))
+
   (defn do-POST [self]
     ;; TODO verify secret
     (let [con-len  (int (.get self.headers "Content-Length"))
          github-ev (.get self.headers "X-GitHub-Event")]
-      (if (or (is None con-len) (not (= github-ev "pull_request")))
-        (.send-response self 400)
-        (try
-          (let [payload (json.loads (.read self.rfile con-len))]
-            (print payload)
-            (.send-response self 200))
-          (except [json.decoder.JSONDecodeError]
-            (.send-response self 400)))))
+      ;; TODO refactor and make more readable
+      (if (= github-ev "ping")
+        (.handle-ping self)
+        (if (or (is None con-len) (not (= github-ev "pull_request")))
+          (.send-response self 400)
+          (try
+            (let [payload (json.loads (.read self.rfile con-len))]
+              (print payload)
+              (.send-response self 200))
+            (except [json.decoder.JSONDecodeError]
+            (.send-response self 400))))))
     (.end-headers self)))
 
 (defn start-server [addr port secret]
