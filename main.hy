@@ -47,7 +47,9 @@
         (print :file sys.stderr
           (.format "Environment variable '{}' is not set" GITHUB-ENV))
         (sys.exit 1))
-      (setv github-api (Github access-token))))
+      (do
+        (global github-api)
+        (setv github-api (Github access-token)))))
 
   (let [parser (argparse.ArgumentParser)]
     (parser.add-argument "secret" :type string
