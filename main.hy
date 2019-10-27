@@ -14,6 +14,8 @@
             repo (.get-repo github-api name)
             pr   (.get-issue repo :number (get dict "number"))]
         (.create-comment pr comment-text)
+        (when close-issue?
+          (.edit pr :state "closed"))
         (.send-response self 200))))
 
   (defn handle-pr [self]
@@ -62,9 +64,15 @@
       :help "Path to markdown file containing comment text")
     (parser.add-argument "-p" :type int :metavar "PORT"
       :default 80 :help "TCP port used by the webhook HTTP server")
+    (parser.add-argument "-c" :action "store_true"
+      :help "Apart from adding a comment, also close the PR")
     (parser.add-argument "-a" :type string :metavar "ADDR"
       :default "localhost" :help "Address the webhook HTTP server binds to")
     (let [args (parser.parse-args)]
+      (setg close-issue? args.c)
       (setg github-api (Github token))
-      (with [f (open args.PATH)] (setg comment-text (.rstrip (.read f))))
+
+      (with [f (open args.PATH)]
+        (setg comment-text (.rstrip (.read f))))
+
       (start-server args.a args.p secret))))
