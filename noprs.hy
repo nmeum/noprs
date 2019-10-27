@@ -7,7 +7,7 @@
 (setv GITHUB-SECRET "GITHUB_WEBHOOK_SECRET") ;; ENV for webhook secret
 
 (defclass GithubWebhookHandler [BaseHTTPRequestHandler]
-  (defn handle-pr-json [self dict]
+  (defn handle-pr [self dict]
     (if (= (get dict "action") "opened")
       (let [name (get (get dict "repository") "full_name")
             repo (.get-repo github-api name)
@@ -17,27 +17,28 @@
           (.edit pr :state "closed"))))
       (.send-response self 200))
 
-  (defn handle-pr [self]
-    (let [con-len (int (.get self.headers "Content-Length"))]
-      (if (is None con-len)
-        (.send-response self 400)
-        (try
-          (.handle-pr-json self (json.loads (.read self.rfile con-len)))
-          (except [json.decoder.JSONDecodeError]
-            (.send-response self 400))))))
-
-  (defn handle-ping [self]
+  (defn handle-ping [self dict]
     (.send-response self 200))
+
+  (defn dispatch-event [self body]
+    (try
+      (let [body-json (json.loads body)
+            event     (.get self.headers "X-GitHub-Event")]
+        (cond
+          [(= event "ping") (.handle-ping self body-json)]
+          [(= event "pull_request") (.handle-pr self body-json)]
+          [True (.send-response self 400)]))
+      (except [json.decoder.JSONDecodeError]
+        (.send-response self 400)))
+    (.end-headers self))
 
   (defn do-POST [self]
     (if (not (= "application/json" (.get self.headers "Content-Type")))
       (.send-response self 400))
-    (let [event (.get self.headers "X-GitHub-Event")]
-      (cond
-        [(= event "ping") (.handle-ping self)]
-        [(= event "pull_request") (.handle-pr self)]
-        [True (.send-response self 400)]))
-    (.end-headers self)))
+      (let [con-len (int (.get self.headers "Content-Length"))]
+        (if (is None con-len)
+          (.send-response self 400)
+          (.dispatch-event self (.read self.rfile con-len))))))
 
 (defmacro setg [name value]
   `(do
