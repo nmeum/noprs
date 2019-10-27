@@ -16,17 +16,15 @@
         (when close-issue?
           (.edit pr :state "closed")))))
 
-  (defn handle-ping [self dict]
-    True)
-
   (defn dispatch-event [self body]
     (try
       (let [body-json (json.loads body)
             event     (.get self.headers "X-GitHub-Event")]
         (cond
-          [(= event "ping") (.handle-ping self body-json)]
-          [(= event "pull_request") (.handle-pr self body-json)]
-          [True (.send-error self 400 "Unsupported webhook event")])
+          [(= event "pull_request")
+            (.handle-pr self body-json)]
+          [(not (= event "ping"))
+            (.send-error self 400 "Unsupported webhook event")])
         (.send-response self 200)
         (.end-headers self))
       (except [json.decoder.JSONDecodeError]
