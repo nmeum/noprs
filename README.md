@@ -1,4 +1,4 @@
-# pr-deactivater
+# noprs
 
 Closes all new GitHub PRs for an organization.
 
