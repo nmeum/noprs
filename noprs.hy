@@ -14,11 +14,10 @@
             pr   (.get-issue repo :number (get dict "number"))]
         (.create-comment pr comment-text)
         (when close-issue?
-          (.edit pr :state "closed"))))
-      (.send-response self 200))
+          (.edit pr :state "closed")))))
 
   (defn handle-ping [self dict]
-    (.send-response self 200))
+    True)
 
   (defn dispatch-event [self body]
     (try
@@ -27,10 +26,11 @@
         (cond
           [(= event "ping") (.handle-ping self body-json)]
           [(= event "pull_request") (.handle-pr self body-json)]
-          [True (.send-response self 400)]))
+          [True (.send-error self 400 "Unsupported webhook event")])
+        (.send-response self 200)
+        (.end-headers self))
       (except [json.decoder.JSONDecodeError]
-        (.send-response self 400)))
-    (.end-headers self))
+        (.send-error self 400 "Received invalid JSON document"))))
 
   (defn from-github? [self header data]
     (let [hmac-obj (hmac.new github-secret :msg data :digestmod "sha1")
@@ -39,12 +39,12 @@
 
   (defn do-POST [self]
     (if (not (= "application/json" (.get self.headers "Content-Type")))
-      (.send-response self 400))
+      (.send-error self 400 "Expected Content-Type application/json")
       (let [con-len (int (.get self.headers "Content-Length" :failobj 0))]
         (let [body (.read self.rfile con-len)]
           (if (.from-github? self (.get self.headers "X-Hub-Signature") body)
             (.dispatch-event self body)
-            (.send-response self 400))))))
+            (.send-error self 403 "HMAC digest validation failed")))))))
 
 (defmacro setg [name value]
   `(do
