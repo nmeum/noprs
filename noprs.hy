@@ -27,7 +27,7 @@
             (.send-error self 400 "Unsupported webhook event")])
         (.send-response self 200)
         (.end-headers self))
-      (except [json.decoder.JSONDecodeError]
+      (except [json.decoder.JSONDecodeError KeyError]
         (.send-error self 400 "Received invalid JSON document"))))
 
   (defn from-github? [self header data]
