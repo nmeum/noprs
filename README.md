@@ -13,11 +13,9 @@ Inspired by [PRBot][PRBot github], used in the GitHub
 for closing all new pull requests. It differs from PRBot in the
 following ways:
 
-	1. It uses [GitHub webhooks][github webhooks] and does not
-	   require a cronjob.
-	2. It optionally closes the GitHub PR in addition to adding a
-	   configurable comment.
-	3. It is written in [hy][hy homepage].
+1. It uses [GitHub webhooks][github webhooks] and does not require a cronjob.
+2. It optionally closes the GitHub PR in addition to adding a configurable comment.
+3. It is written in [hy][hy homepage].
 
 ## Installation
 
