@@ -19,6 +19,17 @@ following ways:
 	   configurable comment.
 	3. It is written in [hy][hy homepage].
 
+## Installation
+
+`noprs` has the following dependencies:
+
+1. [PyGithub][pygithub homepage]
+2. [hy][hy homepage]
+
+After the dependencies have been installed, the script can be invoked
+directly from the repository. If desired, it can also manually be copied
+to an element in `$PATH` as an executable script.
+
 ## Usage
 
 `noprs` is configured via two environment variables:
@@ -56,3 +67,4 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 [linux github]: https://github.com/torvalds/linux/
 [github webhook]: https://developer.github.com/webhooks/
 [hy homepage]: https://docs.hylang.org
+[pygithub homepage]: https://github.com/PyGithub/PyGithub
