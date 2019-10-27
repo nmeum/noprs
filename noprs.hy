@@ -39,11 +39,6 @@
         [True (.send-response self 400)]))
     (.end-headers self)))
 
-(defn start-server [addr port secret]
-  (setv webhook-secret secret)
-  (.serve-forever
-    (HTTPServer (, addr port) GithubWebhookHandler)))
-
 (defmacro setg [name value]
   `(do
     (global ~name)
@@ -69,6 +64,7 @@
       :help "Apart from adding a comment, also close the PR")
     (parser.add-argument "-a" :type string :metavar "ADDR"
       :default "localhost" :help "Address the webhook HTTP server binds to")
+
     (let [args (parser.parse-args)]
       (setg close-issue? args.c)
       (setg github-api (Github token))
@@ -76,4 +72,5 @@
       (with [f (open args.PATH)]
         (setg comment-text (.rstrip (.read f))))
 
-      (start-server args.a args.p secret))))
+      (.serve-forever
+        (HTTPServer (, args.a args.p) GithubWebhookHandler)))))
