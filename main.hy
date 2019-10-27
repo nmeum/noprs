@@ -3,9 +3,8 @@
   [github [Github]])
 (require [hy.contrib.walk [let]])
 
-;; Name of the environment variable containing
-;; the access token for the GitHub API.
-(setv GITHUB-ENV "GITHUB_ACCESS_TOKEN")
+(setv GITHUB-TOKEN  "GITHUB_ACCESS_TOKEN")   ;; ENV for API access token
+(setv GITHUB-SECRET "GITHUB_WEBHOOK_SECRET") ;; ENV for webhook secret
 
 ;; TODO don't use a global variabler for handler parameter.
 ;; I don't like class factories either though.
@@ -47,23 +46,22 @@
   (.serve-forever
     (HTTPServer (, addr port) GithubWebhookHandler)))
 
-(defmain [&rest args]
-  (let [access-token (os.getenv "GITHUB_ACCESS_TOKEN")]
-    (if (is None access-token)
-      (do
-        (print :file sys.stderr
-          (.format "Environment variable '{}' is not set" GITHUB-ENV))
-        (sys.exit 1))
-      (do
-        (global github-api)
-        (setv github-api (Github access-token)))))
+(defn get-env [name]
+  (let [value (os.getenv name)]
+    (when (is None value)
+      (print :file sys.stderr
+        (.format "Environment variable '{}' is not set but required" name))
+      (sys.exit 1))
+    value))
 
-  (let [parser (argparse.ArgumentParser)]
-    (parser.add-argument "secret" :type string
-      :help "GitHub webhook secret, used for authorization")
+(defmain [&rest args]
+  (let [parser (argparse.ArgumentParser)
+        token  (get-env GITHUB-TOKEN)
+        secret (get-env GITHUB-SECRET)]
     (parser.add-argument "-p" :type int :metavar "PORT"
       :default 80 :help "TCP port used by the webhook HTTP server")
     (parser.add-argument "-a" :type string :metavar "ADDR"
       :default "localhost" :help "Address the webhook HTTP server binds to")
     (let [args (parser.parse-args)]
-      (start-server args.a args.p args.secret))))
+      (global github-api) (setv github-api (Github token))
+      (start-server args.a args.p secret))))
