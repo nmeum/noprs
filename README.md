@@ -1,6 +1,6 @@
 # noprs
 
-Closes all new GitHub PRs for an organization.
+GitHub webhook for closing all new GitHub PRs with a custom message.
 
 ## Motivation
 
