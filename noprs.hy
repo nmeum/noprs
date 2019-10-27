@@ -10,13 +10,15 @@
 
 (defclass GithubWebhookHandler [BaseHTTPRequestHandler]
   (defn handle-pr [self dict]
-    (if (= (get dict "action") "opened")
-      (let [name (get (get dict "repository") "full_name")
-            repo (.get-repo github-api name)
-            pr   (.get-issue repo :number (get dict "number"))]
-        (.create-comment pr comment-text)
-        (when close-issue?
-          (.edit pr :state "closed")))))
+    (let [action (get dict "action")]
+      (if (or (= action "opened")
+              (and handle-reopened? (= action "reopened")))
+        (let [name (get (get dict "repository") "full_name")
+              repo (.get-repo github-api name)
+              pr   (.get-issue repo :number (get dict "number"))]
+          (.create-comment pr comment-text)
+          (when close-issue?
+            (.edit pr :state "closed"))))))
 
   (defn dispatch-event [self body]
     (try
@@ -72,11 +74,14 @@
       :default 80 :help "TCP port used by the webhook HTTP server")
     (parser.add-argument "-c" :action "store_true"
       :help "Apart from adding a comment, also close the PR")
+    (parser.add-argument "-r" :action "store_true"
+      :help "Also handle reopened pull requests")
     (parser.add-argument "-a" :type string :metavar "ADDR"
       :default "localhost" :help "Address the webhook HTTP server binds to")
 
     (let [args (parser.parse-args)]
       (setg close-issue? args.c)
+      (setg handle-reopened? args.r)
       (setg github-api (Github token))
       (setg github-secret (.encode secret))
 
