@@ -1,4 +1,4 @@
-(import os sys argparse json
+(import os sys argparse json hmac
   [http.server [*]]
   [github [Github]])
 (require [hy.contrib.walk [let]])
@@ -32,13 +32,21 @@
         (.send-response self 400)))
     (.end-headers self))
 
+  (defn from-github? [self header data]
+    (let [hmac-obj (hmac.new github-secret :msg data :digestmod "sha1")
+          digest   (.hex (.digest hmac-obj))]
+      (= (.format "sha1={}" digest) header)))
+
   (defn do-POST [self]
     (if (not (= "application/json" (.get self.headers "Content-Type")))
       (.send-response self 400))
       (let [con-len (int (.get self.headers "Content-Length"))]
         (if (is None con-len)
           (.send-response self 400)
-          (.dispatch-event self (.read self.rfile con-len))))))
+          (let [body (.read self.rfile con-len)]
+            (if (.from-github? self (.get self.headers "X-Hub-Signature") body)
+              (.dispatch-event self body)
+              (.send-response self 400)))))))
 
 (defmacro setg [name value]
   `(do
@@ -69,6 +77,7 @@
     (let [args (parser.parse-args)]
       (setg close-issue? args.c)
       (setg github-api (Github token))
+      (setg github-secret (.encode secret))
 
       (with [f (open args.PATH)]
         (setg comment-text (.rstrip (.read f))))
