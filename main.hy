@@ -10,6 +10,7 @@
 ;; I don't like class factories either though.
 (setv webhook-secret None)
 (setv github-api None)
+(setv comment-text None)
 
 (defclass GithubWebhookHandler [BaseHTTPRequestHandler]
   (defn handle-pr-json [self dict]
@@ -18,7 +19,7 @@
       (let [name (get (get dict "repository") "full_name")
             repo (.get-repo github-api name)
             pr   (.get-issue repo :number (get dict "number"))]
-        (.create-comment pr "Some Comment")
+        (.create-comment pr comment-text)
         (.send-response self 200))))
 
   (defn handle-pr [self]
@@ -58,10 +59,14 @@
   (let [parser (argparse.ArgumentParser)
         token  (get-env GITHUB-TOKEN)
         secret (get-env GITHUB-SECRET)]
+    (parser.add-argument "PATH" :type string
+      :help "Path to markdown file containing comment text")
     (parser.add-argument "-p" :type int :metavar "PORT"
       :default 80 :help "TCP port used by the webhook HTTP server")
     (parser.add-argument "-a" :type string :metavar "ADDR"
       :default "localhost" :help "Address the webhook HTTP server binds to")
     (let [args (parser.parse-args)]
       (global github-api) (setv github-api (Github token))
+      (global comment-text) (with [f (open args.PATH)]
+                              (setv comment-text (.rstrip (.read f))))
       (start-server args.a args.p secret))))
