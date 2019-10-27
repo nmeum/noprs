@@ -14,8 +14,8 @@
             pr   (.get-issue repo :number (get dict "number"))]
         (.create-comment pr comment-text)
         (when close-issue?
-          (.edit pr :state "closed"))
-        (.send-response self 200))))
+          (.edit pr :state "closed"))))
+      (.send-response self 200))
 
   (defn handle-pr [self]
     (let [con-len (int (.get self.headers "Content-Length"))]
