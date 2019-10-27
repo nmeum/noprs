@@ -13,34 +13,33 @@
 (setv github-api None)
 
 (defclass GithubWebhookHandler [BaseHTTPRequestHandler]
-  (defn handle-pr [self dict]
+  (defn handle-pr-json [self dict]
     (print dict)
     (if (= (get dict "action") "opened")
       (let [name (get (get dict "repository") "full_name")
             repo (.get-repo github-api name)
             pr   (.get-issue repo :number (get dict "number"))]
-        (.create-comment pr "Some Comment"))))
+        (.create-comment pr "Some Comment")
+        (.send-response self 200))))
+
+  (defn handle-pr [self]
+    (let [con-len (int (.get self.headers "Content-Length"))]
+      (if (is None con-len)
+        (.send-response self 400)
+        (try
+          (.handle-pr-json self (json.loads (.read self.rfile con-len)))
+          (except [json.decoder.JSONDecodeError]
+            (.send-response self 400))))))
 
   (defn handle-ping [self]
-    (.send-response self 200)
-    (.send-header self "Content-Type" "application/json")
-    (.end-headers self))
+    (.send-response self 200))
 
   (defn do-POST [self]
-    ;; TODO verify secret
-    (let [con-len  (int (.get self.headers "Content-Length"))
-         github-ev (.get self.headers "X-GitHub-Event")]
-      ;; TODO refactor and make more readable
-      (if (= github-ev "ping")
-        (.handle-ping self)
-        (if (or (is None con-len) (not (= github-ev "pull_request")))
-          (.send-response self 400)
-          (try
-            (let [payload (json.loads (.read self.rfile con-len))]
-              (.handle-pr self payload)
-              (.send-response self 200))
-            (except [json.decoder.JSONDecodeError]
-            (.send-response self 400))))))
+    (let [event (.get self.headers "X-GitHub-Event")]
+      (cond
+        [(= event "ping") (.handle-ping self)]
+        [(= event "pull_request") (.handle-pr self)]
+        [True (.send-response self 400)]))
     (.end-headers self)))
 
 (defn start-server [addr port secret]
