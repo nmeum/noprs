@@ -1,3 +1,5 @@
+#!/usr/bin/env hy
+
 (import os sys argparse json hmac
   [http.server [*]]
   [github [Github]])
