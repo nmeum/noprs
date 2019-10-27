@@ -6,12 +6,6 @@
 (setv GITHUB-TOKEN  "GITHUB_ACCESS_TOKEN")   ;; ENV for API access token
 (setv GITHUB-SECRET "GITHUB_WEBHOOK_SECRET") ;; ENV for webhook secret
 
-;; TODO don't use a global variabler for handler parameter.
-;; I don't like class factories either though.
-(setv webhook-secret None)
-(setv github-api None)
-(setv comment-text None)
-
 (defclass GithubWebhookHandler [BaseHTTPRequestHandler]
   (defn handle-pr-json [self dict]
     (print dict)
@@ -47,6 +41,11 @@
   (.serve-forever
     (HTTPServer (, addr port) GithubWebhookHandler)))
 
+(defmacro setg [name value]
+  `(do
+    (global ~name)
+    (setv ~name ~value)))
+
 (defn get-env [name]
   (let [value (os.getenv name)]
     (when (is None value)
@@ -66,7 +65,6 @@
     (parser.add-argument "-a" :type string :metavar "ADDR"
       :default "localhost" :help "Address the webhook HTTP server binds to")
     (let [args (parser.parse-args)]
-      (global github-api) (setv github-api (Github token))
-      (global comment-text) (with [f (open args.PATH)]
-                              (setv comment-text (.rstrip (.read f))))
+      (setg github-api (Github token))
+      (with [f (open args.PATH)] (setg comment-text (.rstrip (.read f))))
       (start-server args.a args.p secret))))
