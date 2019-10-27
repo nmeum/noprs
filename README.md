@@ -21,7 +21,20 @@ following ways:
 
 ## Usage
 
-To-do.
+noprs is configured via two environment variables:
+
+1. `GITHUB_ACCESS_TOKEN`: Must be set to a GitHub API access token.
+2. `GITHUB_WEBHOOK_SECRET`: Must be set to the GitHub webhook secret.
+
+After these environment variables have been set, start `noprs`:
+
+	$ hy noprs.hy -a localhost -p 8080 -c my-comment.md
+
+Afterwards, register the webhook on GitHub, either for an entire
+organization or a single repository. The `Content-Type` must be set to
+`application/json` and the webhook must only deliver PR events.
+
+Test if everything works as expected by creating a new GitHub PR.
 
 ## License
 
