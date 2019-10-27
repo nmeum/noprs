@@ -63,6 +63,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 [dear-github #84]: https://github.com/dear-github/dear-github/issues/84
 [PRBot github]: https://github.com/ajdlinux/PRBot
 [linux github]: https://github.com/torvalds/linux/
-[github webhook]: https://developer.github.com/webhooks/
+[github webhooks]: https://developer.github.com/webhooks/
 [hy homepage]: https://docs.hylang.org
 [pygithub homepage]: https://github.com/PyGithub/PyGithub
