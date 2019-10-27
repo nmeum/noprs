@@ -44,7 +44,10 @@
         (let [body (.read self.rfile con-len)]
           (if (.from-github? self (.get self.headers "X-Hub-Signature") body)
             (.dispatch-event self body)
-            (.send-error self 403 "HMAC digest validation failed")))))))
+            (.send-error self 403 "HMAC digest validation failed")))))
+
+    ;; Flush stderr, containing log messages created by http.server
+    (sys.stderr.flush)))
 
 (defmacro setg [name value]
   `(do
