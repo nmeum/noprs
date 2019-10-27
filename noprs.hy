@@ -30,6 +30,8 @@
     (.send-response self 200))
 
   (defn do-POST [self]
+    (if (not (= "application/json" (.get self.headers "Content-Type")))
+      (.send-response self 400))
     (let [event (.get self.headers "X-GitHub-Event")]
       (cond
         [(= event "ping") (.handle-ping self)]
