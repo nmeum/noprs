@@ -8,7 +8,6 @@
 
 (defclass GithubWebhookHandler [BaseHTTPRequestHandler]
   (defn handle-pr-json [self dict]
-    (print dict)
     (if (= (get dict "action") "opened")
       (let [name (get (get dict "repository") "full_name")
             repo (.get-repo github-api name)
