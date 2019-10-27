@@ -21,7 +21,7 @@ following ways:
 
 ## Usage
 
-noprs is configured via two environment variables:
+`noprs` is configured via two environment variables:
 
 1. `GITHUB_ACCESS_TOKEN`: Must be set to a GitHub API access token.
 2. `GITHUB_WEBHOOK_SECRET`: Must be set to the GitHub webhook secret.
