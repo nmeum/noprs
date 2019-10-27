@@ -38,7 +38,7 @@
   (defn do-POST [self]
     (if (not (= "application/json" (.get self.headers "Content-Type")))
       (.send-error self 400 "Expected Content-Type application/json")
-      (let [con-len (int (.get self.headers "Content-Length" :failobj 0))]
+      (let [con-len (int (.get self.headers "Content-Length" :failobj "0"))]
         (let [body (.read self.rfile con-len)]
           (if (.from-github? self (.get self.headers "X-Hub-Signature") body)
             (.dispatch-event self body)
