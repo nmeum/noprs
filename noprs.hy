@@ -40,13 +40,11 @@
   (defn do-POST [self]
     (if (not (= "application/json" (.get self.headers "Content-Type")))
       (.send-response self 400))
-      (let [con-len (int (.get self.headers "Content-Length"))]
-        (if (is None con-len)
-          (.send-response self 400)
-          (let [body (.read self.rfile con-len)]
-            (if (.from-github? self (.get self.headers "X-Hub-Signature") body)
-              (.dispatch-event self body)
-              (.send-response self 400)))))))
+      (let [con-len (int (.get self.headers "Content-Length" :failobj 0))]
+        (let [body (.read self.rfile con-len)]
+          (if (.from-github? self (.get self.headers "X-Hub-Signature") body)
+            (.dispatch-event self body)
+            (.send-response self 400))))))
 
 (defmacro setg [name value]
   `(do
