@@ -8,6 +8,14 @@
 (setv GITHUB-TOKEN  "GITHUB_ACCESS_TOKEN")   ;; ENV for API access token
 (setv GITHUB-SECRET "GITHUB_WEBHOOK_SECRET") ;; ENV for webhook secret
 
+(defclass WebhookException [Exception]
+  (defn --init-- [self msg &optional [code 500]]
+    (setv self.code code)
+    (.--init-- (super WebhookException self) msg))
+
+  (defn get-status-code [self]
+    (. self code)))
+
 (defclass GithubWebhookHandler [BaseHTTPRequestHandler]
   (defn handle-pr [self dict]
     (let [action (get dict "action")]
@@ -28,9 +36,11 @@
           [(= event "pull_request")
             (.handle-pr self body-json)]
           [(not (= event "ping"))
-            (.send-error self 400 "Unsupported webhook event")])
+            (raise (WebhookException "Unsupported webhook event" 500))])
         (.send-response self 200)
         (.end-headers self))
+      (except [e WebhookException]
+        (.send-error self (.get-status-code e) (str e)))
       (except [json.decoder.JSONDecodeError KeyError]
         (.send-error self 400 "Received invalid JSON document"))))
 
