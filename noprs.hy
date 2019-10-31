@@ -41,7 +41,7 @@
         (.end-headers self))
       (except [e WebhookException]
         (.send-error self (.get-status-code e) (str e)))
-      (except [json.decoder.JSONDecodeError KeyError]
+      (except [[json.decoder.JSONDecodeError KeyError]]
         (.send-error self 400 "Received invalid JSON document"))))
 
   (defn from-github? [self header data]
